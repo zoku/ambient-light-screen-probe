@@ -72,9 +72,7 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="ImageUtil.cs" />
-    <Compile Include="ProbePoints.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="ProbePoints.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
