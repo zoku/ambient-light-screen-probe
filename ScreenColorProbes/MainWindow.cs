@@ -17,13 +17,13 @@ namespace ScreenColorGrabber
 
         Font labelFont = new Font("Arial", 7);
 
+        // Get screen's dimensions
+        int screenWidth = Screen.PrimaryScreen.Bounds.Width;
+        int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+
         public MainWindow()
         {
             InitializeComponent();
-
-            // Get screen's dimensions
-            int screenWidth = Screen.PrimaryScreen.Bounds.Width;
-            int screenHeight = Screen.PrimaryScreen.Bounds.Height;
 
             // Size window to take half of the screen and center it
             ClientSize = new Size(screenWidth / 2, screenHeight / 2);
@@ -32,6 +32,20 @@ namespace ScreenColorGrabber
 
             // Set timer interval
             refreshTimer.Interval = intervalMS;
+
+            // Set comboBox with list of screens
+            screenList.Left = ClientSize.Width / 2 - screenList.Width / 2;
+            screenList.Top = ClientSize.Height / 2 - screenList.Height / 2;
+            screenList.Items.Clear();
+
+            var dd = new DISPLAY_DEVICE();
+            // var screens = EnumDisplayDevices(null, dd.DeviceName);
+
+            foreach (var screen in Screen.AllScreens)
+            {
+                screenList.Items.Add(new ScreenItem(screen.DeviceName, screen.Bounds.Width, screen.Bounds.Height));
+            }
+            screenList.SelectedIndex = 0;
 
             // Make window as static as possible to ease positioning of controls
             FormBorderStyle = FormBorderStyle.FixedSingle;

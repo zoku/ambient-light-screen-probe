@@ -30,21 +30,33 @@
         {
             this.components = new System.ComponentModel.Container();
             this.refreshTimer = new System.Windows.Forms.Timer(this.components);
+            this.screenList = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // refreshTimer
             // 
             this.refreshTimer.Enabled = true;
             // 
-            // Form1
+            // screenList
+            // 
+            this.screenList.DropDownWidth = 150;
+            this.screenList.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.screenList.FormattingEnabled = true;
+            this.screenList.Location = new System.Drawing.Point(354, 291);
+            this.screenList.Name = "screenList";
+            this.screenList.Size = new System.Drawing.Size(121, 21);
+            this.screenList.TabIndex = 0;
+            // 
+            // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(858, 671);
+            this.Controls.Add(this.screenList);
             this.DoubleBuffered = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "Form1";
+            this.Name = "MainWindow";
             this.Text = "Screen Color Probes";
             this.ResumeLayout(false);
 
@@ -52,5 +64,6 @@
 
         #endregion
         private System.Windows.Forms.Timer refreshTimer;
+        private System.Windows.Forms.ComboBox screenList;
     }
 }
