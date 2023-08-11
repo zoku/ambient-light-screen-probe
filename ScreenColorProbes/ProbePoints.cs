@@ -3,22 +3,18 @@
 namespace ScreenColorGrabber
 {
     public class ProbePoints{
-        List<int> x { get; set; }
-        List<int> y { get; set; }
+        public List<int> X { get; set; }
+        public List<int> Y { get; set; }
 
-        int top { get; set; }
-        int right { get; set; }
-        int bottom { get; set; }
-        int left { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
 
-        public ProbePoints(List<int> x, List<int> y, int top, int right, int bottom, int left)
+        public ProbePoints(List<int> X, List<int> Y, int Width, int Height)
         {
-            this.x = x;
-            this.y = y;
-            this.top = top;
-            this.right = right;
-            this.bottom = bottom;
-            this.left = left;
+            this.X = X;
+            this.Y = Y;
+            this.Width = Width;
+            this.Height = Height;
         }
     }
 }

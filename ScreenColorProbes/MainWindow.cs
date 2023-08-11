@@ -8,16 +8,23 @@ namespace ScreenColorGrabber
 {
     public partial class MainWindow : Form
     {
-        int areaDiameter = 100;
+        int areaDepth = 100;
         int areaCount = 120;
+
+        List<Area> areas = new List<Area>();
+        List<Label> labels = new List<Label>();
 
         public MainWindow()
         {
             InitializeComponent();
 
+            // Get screen's dimensions
+            int screenWidth = Screen.PrimaryScreen.Bounds.Width;
+            int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+
             // Size window to take half of the screen and center it
-            Width = Screen.PrimaryScreen.Bounds.Width / 2;
-            Height = Screen.PrimaryScreen.Bounds.Height / 2;
+            ClientSize = new Size(screenWidth / 2, screenHeight / 2);
+            BackColor = Color.Black;
             CenterToScreen();
 
             // Make window as static as possible to ease positioning of controls
@@ -26,48 +33,41 @@ namespace ScreenColorGrabber
             MinimizeBox = false;
 
             // Create a bitmap to be used as canvas for image manipulation
-            var bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            var bitmap = new Bitmap(screenWidth, screenHeight);
 
             // Create areas and place them automatically
             // TODO: Look for existing config and load areas from there
-            int column = 0;
-            int row = 0;
 
-            List<Area> areas = new List<Area>();
-            List<Label> labels = new List<Label>();
+            var probes = autoArrangeAreas(bitmap.Width, bitmap.Height, areaCount);
 
-            for (int i=0; i < areaCount; i++)
+            // Add top probes
+            foreach (int probeX in probes.X)
             {
-                Label label = new Label();
+                addProbe(probeX, 0, probes.Width, areaDepth);
+            }
 
-                if (i > 0 && i % 12 == 0)
-                {
-                    column = 0;
-                    row++;
-                }
-                
+            // Reverse direction for bottom probes
+            probes.X.Reverse();
 
-                int offsetX = areaDiameter * column;
-                int offsetY = areaDiameter * row;
+            // Add right probes
+            foreach (int probeY in probes.Y)
+            {
+                addProbe(screenWidth - areaDepth, probeY, areaDepth, probes.Height);
+            }
 
-                label.Width = areaDiameter / 2;
-                label.Height = areaDiameter / 2;
+            // Reverse direction for left probes
+            probes.Y.Reverse();
 
-                label.Left = (areaDiameter / 2) * column;
-                label.Top = (areaDiameter / 2) * row;
+            // Add bottom probes
+            foreach (int probeX in probes.X)
+            {
+                addProbe(probeX, screenHeight - areaDepth, probes.Width, areaDepth);
+            }
 
-                label.BackColor = Color.Pink;
-                label.Text = "";
-                label.BorderStyle = BorderStyle.FixedSingle;
-
-                label.Visible = true;
-
-                Controls.Add(label);
-
-                areas.Add(new Area(offsetX, offsetY, areaDiameter, areaDiameter));
-                labels.Add(label);
-
-                column++;
+            // Add left probes
+            foreach (int probeY in probes.Y)
+            {
+                addProbe(0, probeY, areaDepth, probes.Height);
             }
 
             // Add probing to timer
@@ -85,7 +85,9 @@ namespace ScreenColorGrabber
                         Label label = labels[i];
 
                         label.BackColor = color;
-                        label.Text = "R " + color.R.ToString() + "\nG " + color.G.ToString() + "\nB " + color.B.ToString();
+                        label.Text = i + ": " + (label.Left * 2 + label.Width * 2) + "x" + (label.Top * 2);
+                        // label.Text = "R " + color.R.ToString() + "\nG " + color.G.ToString() + "\nB " + color.B.ToString();
+                        label.ForeColor = (color.R + color.G + color.B) / 3 < 120 ? Color.White : Color.Black;
 
                         // TODO: Add code to control LED stripe
                         // TODO: Source: https://github.com/arvydas/BlinkStickDotNet
@@ -94,8 +96,32 @@ namespace ScreenColorGrabber
             };
         }
 
+        private void addProbe(int x, int y, int width, int height)
+        {
+            Label label = new Label
+            {
+                Width = width / 2,
+                Height = height / 2,
+                Left = x / 2,
+                Top = y / 2,
+
+                BackColor = Color.HotPink,
+                Text = x + "x" + y,
+                BorderStyle = BorderStyle.None,
+                Visible = true
+            };
+
+            Controls.Add(label);
+
+            areas.Add(new Area(x, y, width, height));
+            labels.Add(label);
+        }
+
         /**
-         * 
+         * Takes the screen size and number of probes to distribute around the screen.
+         * Returns the offsets of the probes in X and Y direction to 0,0 of the screen.
+         * The returned object only contains half of the points. X for top and bottom and Y for left and right.
+         * It also contains the necessary offset to the respective edges of the screen.
          * 
          * param name="screenWidth" 
          * param name="screenHeight"
@@ -103,7 +129,7 @@ namespace ScreenColorGrabber
          * 
          * returns ProbePoints or null if probe count is odd
          */
-        private ProbePoints AutoArrangeAreas(int screenWidth, int screenHeight, int probeCount)
+        private ProbePoints autoArrangeAreas(int screenWidth, int screenHeight, int probeCount)
         {
             if (probeCount % 2 != 0)
             {
@@ -114,8 +140,8 @@ namespace ScreenColorGrabber
 
             int halfCount = probeCount / 2;
 
-            int countHorizontal = (int)Math.Floor(halfCount / ratio);
-            int countVertical = halfCount - countHorizontal;
+            int countVertical = (int)Math.Floor(halfCount / ratio);
+            int countHorizontal = halfCount - countVertical;
 
             int cellWidth = (int)Math.Floor((double)screenWidth / (double)countHorizontal);
             int cellHeight = (int)Math.Floor((double)screenHeight / (double)countVertical);
@@ -126,22 +152,20 @@ namespace ScreenColorGrabber
             List<int> pointsX = new List<int>();
             for (int i = 0; i < countHorizontal; i++)
             {
-                pointsX.Add(cellWidth  * i + offsetX);
+                pointsX.Add(cellWidth  * i);
             }
 
             List<int> pointsY = new List<int>();
             for (int i = 0; i < countVertical; i++)
             {
-                pointsY.Add(cellHeight * i + offsetY);
+                pointsY.Add(cellHeight * i);
             }
 
             ProbePoints probePoints = new ProbePoints(
-                x: pointsX,
-                y: pointsY,
-                top: 0,
-                right: screenWidth - cellWidth,
-                bottom: screenHeight - cellHeight,
-                left: 0
+                X: pointsX,
+                Y: pointsY,
+                Width: cellWidth,
+                Height: cellHeight
             );
 
             return probePoints;
