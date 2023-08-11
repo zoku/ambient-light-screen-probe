@@ -15,15 +15,21 @@ namespace ScreenColorGrabber
         {
             InitializeComponent();
 
+            // Size window to take half of the screen and center it
             Width = Screen.PrimaryScreen.Bounds.Width / 2;
             Height = Screen.PrimaryScreen.Bounds.Height / 2;
+            CenterToScreen();
 
+            // Make window as static as possible to ease positioning of controls
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             MinimizeBox = false;
 
+            // Create a bitmap to be used as canvas for image manipulation
             var bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
 
+            // Create areas and place them automatically
+            // TODO: Look for existing config and load areas from there
             int column = 0;
             int row = 0;
 
@@ -64,6 +70,7 @@ namespace ScreenColorGrabber
                 column++;
             }
 
+            // Add probing to timer
             refreshTimer.Tick += (sender, e) =>
             {
                 using (var g = Graphics.FromImage(bitmap))
@@ -79,27 +86,39 @@ namespace ScreenColorGrabber
 
                         label.BackColor = color;
                         label.Text = "R " + color.R.ToString() + "\nG " + color.G.ToString() + "\nB " + color.B.ToString();
+
+                        // TODO: Add code to control LED stripe
+                        // TODO: Source: https://github.com/arvydas/BlinkStickDotNet
                     }
                 }
             };
         }
 
-        private ProbePoints autoArrangeAreas(int width, int height, int count)
+        /**
+         * 
+         * 
+         * param name="screenWidth" 
+         * param name="screenHeight"
+         * param name="probeCount" Number of screen probes (must be an even number)
+         * 
+         * returns ProbePoints or null if probe count is odd
+         */
+        private ProbePoints AutoArrangeAreas(int screenWidth, int screenHeight, int probeCount)
         {
-            if (count % 2 != 0)
+            if (probeCount % 2 != 0)
             {
                 return null;
             }
 
-            float ratio = width / height;
+            float ratio = screenWidth / screenHeight;
 
-            int halfCount = count / 2;
+            int halfCount = probeCount / 2;
 
             int countHorizontal = (int)Math.Floor(halfCount / ratio);
             int countVertical = halfCount - countHorizontal;
 
-            int cellWidth = (int)Math.Floor((double)width / (double)countHorizontal);
-            int cellHeight = (int)Math.Floor((double)height / (double)countVertical);
+            int cellWidth = (int)Math.Floor((double)screenWidth / (double)countHorizontal);
+            int cellHeight = (int)Math.Floor((double)screenHeight / (double)countVertical);
 
             int offsetX = (int)Math.Floor((double)cellWidth / 2);
             int offsetY = (int)Math.Floor((double)cellHeight / 2);
@@ -120,32 +139,12 @@ namespace ScreenColorGrabber
                 x: pointsX,
                 y: pointsY,
                 top: 0,
-                right: width - cellWidth,
-                bottom: height - cellHeight,
+                right: screenWidth - cellWidth,
+                bottom: screenHeight - cellHeight,
                 left: 0
             );
 
             return probePoints;
-        }
-
-        private class ProbePoints{
-            List<int> x { get; set; }
-            List<int> y { get; set; }
-
-            int top { get; set; }
-            int right { get; set; }
-            int bottom { get; set; }
-            int left { get; set; }
-
-            public ProbePoints(List<int> x, List<int> y, int top, int right, int bottom, int left)
-            {
-                this.x = x;
-                this.y = y;
-                this.top = top;
-                this.right = right;
-                this.bottom = bottom;
-                this.left = left;
-            }
         }
     }
 }
