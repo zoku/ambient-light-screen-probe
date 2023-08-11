@@ -2,7 +2,7 @@
 
 namespace ScreenColorGrabber
 {
-    public partial class Form1
+    public partial class MainWindow
     {
         private class ProbePoints{
             List<int> x { get; set; }

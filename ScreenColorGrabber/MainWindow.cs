@@ -6,12 +6,12 @@ using Label = System.Windows.Forms.Label;
 
 namespace ScreenColorGrabber
 {
-    public partial class Form1 : Form
+    public partial class MainWindow : Form
     {
         int areaDiameter = 100;
         int areaCount = 120;
 
-        public Form1()
+        public MainWindow()
         {
             InitializeComponent();
 

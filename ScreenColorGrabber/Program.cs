@@ -11,7 +11,7 @@ namespace ScreenColorGrabber
     {
         static void Main(string[] args)
         {
-            Application.Run(new Form1());
+            Application.Run(new MainWindow());
         }
     }
 }
