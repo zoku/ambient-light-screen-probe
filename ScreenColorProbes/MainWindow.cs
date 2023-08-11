@@ -10,9 +10,12 @@ namespace ScreenColorGrabber
     {
         int areaDepth = 100;
         int areaCount = 120;
+        int intervalMS = 50;
 
         List<Area> areas = new List<Area>();
         List<Label> labels = new List<Label>();
+
+        Font labelFont = new Font("Arial", 7);
 
         public MainWindow()
         {
@@ -26,6 +29,9 @@ namespace ScreenColorGrabber
             ClientSize = new Size(screenWidth / 2, screenHeight / 2);
             BackColor = Color.Black;
             CenterToScreen();
+
+            // Set timer interval
+            refreshTimer.Interval = intervalMS;
 
             // Make window as static as possible to ease positioning of controls
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -84,9 +90,13 @@ namespace ScreenColorGrabber
                         Color color = averageColors[i];
                         Label label = labels[i];
 
+                        byte[] rgb = { color.R, color.G, color.B };
+                        string hexColor = BitConverter.ToString(rgb).Replace("-", "");
+
                         label.BackColor = color;
-                        label.Text = i + ": " + (label.Left * 2 + label.Width * 2) + "x" + (label.Top * 2);
+                        // label.Text = i + ": " + (label.Left * 2 + label.Width * 2) + "x" + (label.Top * 2);
                         // label.Text = "R " + color.R.ToString() + "\nG " + color.G.ToString() + "\nB " + color.B.ToString();
+                        label.Text = "#" + hexColor;
                         label.ForeColor = (color.R + color.G + color.B) / 3 < 120 ? Color.White : Color.Black;
 
                         // TODO: Add code to control LED stripe
@@ -107,8 +117,10 @@ namespace ScreenColorGrabber
 
                 BackColor = Color.HotPink,
                 Text = x + "x" + y,
+                Font = labelFont,
+                TextAlign = ContentAlignment.MiddleCenter,
                 BorderStyle = BorderStyle.None,
-                Visible = true
+                Visible = true,
             };
 
             Controls.Add(label);
