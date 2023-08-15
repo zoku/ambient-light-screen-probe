@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using Label = System.Windows.Forms.Label;
@@ -9,7 +10,7 @@ namespace ScreenColorGrabber
     public partial class MainWindow : Form
     {
         int areaDepth = 100;
-        int areaCount = 120;
+        int areaCount = 158;
         int intervalMS = 50;
 
         List<Area> areas = new List<Area>();
@@ -53,42 +54,27 @@ namespace ScreenColorGrabber
             MinimizeBox = false;
 
             // Create a bitmap to be used as canvas for image manipulation
-            var bitmap = new Bitmap(screenWidth, screenHeight);
+            Bitmap bitmap = new Bitmap(screenWidth, screenHeight);
 
             // Create areas and place them automatically
             // TODO: Look for existing config and load areas from there
 
             var probes = autoArrangeAreas(bitmap.Width, bitmap.Height, areaCount);
 
-            // Add top probes
-            foreach (int probeX in probes.X)
-            {
-                addProbe(probeX, 0, probes.Width, areaDepth);
-            }
+            float scaleX = 0.0f;
+            float scaleY = 0.0f;
 
-            // Reverse direction for bottom probes
-            probes.X.Reverse();
+            horizontalScale.ValueChanged += (a, e) => {
+                scaleX = horizontalScale.Value / 100.0f;
+                refreshProbes(probes, scaleX, scaleY);
+            };
 
-            // Add right probes
-            foreach (int probeY in probes.Y)
-            {
-                addProbe(screenWidth - areaDepth, probeY, areaDepth, probes.Height);
-            }
+            verticalScale.ValueChanged += (a, e) => {
+                scaleY = verticalScale.Value / 100.0f;
+                refreshProbes(probes, scaleX, scaleY);
+            };
 
-            // Reverse direction for left probes
-            probes.Y.Reverse();
-
-            // Add bottom probes
-            foreach (int probeX in probes.X)
-            {
-                addProbe(probeX, screenHeight - areaDepth, probes.Width, areaDepth);
-            }
-
-            // Add left probes
-            foreach (int probeY in probes.Y)
-            {
-                addProbe(0, probeY, areaDepth, probes.Height);
-            }
+            refreshProbes(probes, scaleX, scaleY);
 
             // Add probing to timer
             refreshTimer.Tick += (sender, e) =>
@@ -110,7 +96,8 @@ namespace ScreenColorGrabber
                         label.BackColor = color;
                         // label.Text = i + ": " + (label.Left * 2 + label.Width * 2) + "x" + (label.Top * 2);
                         // label.Text = "R " + color.R.ToString() + "\nG " + color.G.ToString() + "\nB " + color.B.ToString();
-                        label.Text = "#" + hexColor;
+                        // label.Text = "#" + hexColor;
+                        label.Text = "";
                         label.ForeColor = (color.R + color.G + color.B) / 3 < 120 ? Color.White : Color.Black;
 
                         // TODO: Add code to control LED stripe
@@ -120,26 +107,91 @@ namespace ScreenColorGrabber
             };
         }
 
-        private void addProbe(int x, int y, int width, int height)
+        private void refreshProbes(ProbePoints probes, float scaleX, float scaleY)
+        {
+            refreshTimer.Stop();
+
+            foreach (var label in labels)
+            {
+                Controls.Remove(label);
+            }
+
+            areas.Clear();
+            labels.Clear();
+
+            // Add top probes
+            foreach (int probeX in probes.X)
+            {
+                addProbe(
+                    probeX * (1 - scaleX * 2) + (screenWidth * scaleX), // X
+                    0 + (screenHeight * scaleY), // Y
+                    probes.Width * (1 - scaleX * 2), // W
+                    areaDepth * (1 - scaleY) // H
+                );
+            }
+
+            // Reverse direction for bottom probes
+            probes.X.Reverse();
+
+            // Add right probes
+            foreach (int probeY in probes.Y)
+            {
+                addProbe(
+                    screenWidth - areaDepth - (screenWidth * scaleX), // X
+                    probeY * (1 - scaleY * 2) + (screenHeight * scaleY), // Y
+                    areaDepth * (1 - scaleX), // W
+                    probes.Height * (1 - scaleY * 2) // H
+                );
+            }
+
+            // Reverse direction for left probes
+            probes.Y.Reverse();
+
+            // Add bottom probes
+            foreach (int probeX in probes.X)
+            {
+                addProbe(
+                    probeX * (1 - scaleX * 2) + (screenWidth * scaleX), // X
+                    (screenHeight - areaDepth) - (screenHeight * scaleY), // Y
+                    probes.Width * (1 - scaleX * 2), // W
+                    areaDepth * (1 - scaleY) // H
+                );
+            }
+
+            // Add left probes
+            foreach (int probeY in probes.Y)
+            {
+                addProbe(
+                    0 + (screenWidth * scaleX), // X
+                    probeY * (1 - scaleY * 2) + (screenHeight * scaleY), // Y
+                    areaDepth * (1 - scaleX), // W
+                    probes.Height * (1 - scaleY * 2) // H
+                );
+            }
+
+            refreshTimer.Start();
+        }
+
+        private void addProbe(float x, float y, float width, float height)
         {
             Label label = new Label
             {
-                Width = width / 2,
-                Height = height / 2,
-                Left = x / 2,
-                Top = y / 2,
+                Width = (int)Math.Ceiling(width / 2),
+                Height = (int)Math.Ceiling(height / 2),
+                Left = (int)Math.Ceiling(x / 2),
+                Top = (int)Math.Ceiling(y / 2),
 
-                BackColor = Color.HotPink,
-                Text = x + "x" + y,
-                Font = labelFont,
-                TextAlign = ContentAlignment.MiddleCenter,
+                // BackColor = Color.HotPink,
+                // Text = x + "x" + y,
+                // Font = labelFont,
+                // TextAlign = ContentAlignment.MiddleCenter,
                 BorderStyle = BorderStyle.None,
                 Visible = true,
             };
 
             Controls.Add(label);
 
-            areas.Add(new Area(x, y, width, height));
+            areas.Add(new Area((int)x, (int)y, (int)(width * 0.1), (int)(height * 0.1)));
             labels.Add(label);
         }
 
