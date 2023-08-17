@@ -9,7 +9,7 @@ namespace ScreenColorGrabber
 {
     public partial class MainWindow : Form
     {
-        int areaDepth = 100;
+        int areaDepth = 50;
         int areaCount = 158;
         int intervalMS = 50;
 
@@ -137,7 +137,7 @@ namespace ScreenColorGrabber
             foreach (int probeY in probes.Y)
             {
                 addProbe(
-                    screenWidth - areaDepth - (screenWidth * scaleX), // X
+                    screenWidth - (areaDepth * (1 - scaleX)) - (screenWidth * scaleX), // X
                     probeY * (1 - scaleY * 2) + (screenHeight * scaleY), // Y
                     areaDepth * (1 - scaleX), // W
                     probes.Height * (1 - scaleY * 2) // H
@@ -152,7 +152,7 @@ namespace ScreenColorGrabber
             {
                 addProbe(
                     probeX * (1 - scaleX * 2) + (screenWidth * scaleX), // X
-                    (screenHeight - areaDepth) - (screenHeight * scaleY), // Y
+                    (screenHeight - (areaDepth * (1 - scaleY))) - (screenHeight * scaleY), // Y
                     probes.Width * (1 - scaleX * 2), // W
                     areaDepth * (1 - scaleY) // H
                 );
